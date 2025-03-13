@@ -2,8 +2,23 @@ const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
+const helmet = require('helmet');
 
 const app = express();
+const port = process.env.PORT || 3000;
+
+// Use Helmet to set security-related HTTP headers
+app.use(helmet());
+
+// Set Content Security Policy (CSP) headers
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
+  );
+  next();
+});
+
 app.use(cors()); // Enable CORS
 app.use(express.json());
 
@@ -62,8 +77,7 @@ app.get('/passwords', authenticateBasic, (req, res) => {
   res.json(userPasswords);
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
 
