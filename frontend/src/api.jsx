@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://password-manager-snowy-eta.vercel.app',
+  baseURL: 'https://password-manager-snowy-eta.vercel.app', // Ensure this is the correct deployed backend URL
 });
 
 const getAuthHeader = () => {
@@ -22,7 +22,7 @@ export const register = async (user) => {
     return response.data;
   } catch (error) {
     console.error('Error during registration:', error);
-    throw error;
+    throw error.response ? error.response.data : new Error('Registration failed');
   }
 };
 
@@ -34,7 +34,7 @@ export const login = async (user) => {
     return response.data;
   } catch (error) {
     console.error('Error during login:', error);
-    throw error;
+    throw error.response ? error.response.data : new Error('Login failed');
   }
 };
 
@@ -46,7 +46,7 @@ export const savePassword = async (password) => {
     return response.data;
   } catch (error) {
     console.error('Error during savePassword:', error);
-    throw error;
+    throw error.response ? error.response.data : new Error('Save password failed');
   }
 };
 
@@ -58,6 +58,6 @@ export const getPasswords = async () => {
     return response.data;
   } catch (error) {
     console.error('Error during getPasswords:', error);
-    throw error;
+    throw error.response ? error.response.data : new Error('Get passwords failed');
   }
 };
