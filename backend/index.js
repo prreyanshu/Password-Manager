@@ -3,6 +3,7 @@ const cors = require('cors');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const helmet = require('helmet');
+const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -14,13 +15,16 @@ app.use(helmet());
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';"
+    "default-src 'self'; img-src 'self' data:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';"
   );
   next();
 });
 
 app.use(cors()); // Enable CORS
 app.use(express.json());
+
+// Serve static files from the "public" directory
+app.use(express.static(path.join(__dirname, 'public')));
 
 const users = [];
 const passwords = [];
@@ -75,6 +79,11 @@ app.post('/generate-password', authenticateBasic, (req, res) => {
 app.get('/passwords', authenticateBasic, (req, res) => {
   const userPasswords = passwords.filter(p => p.username === req.user.username);
   res.json(userPasswords);
+});
+
+// Serve the index.html file for the root URL
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(port, () => {
