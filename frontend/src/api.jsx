@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://password-manager-oaq8.vercel.app', // Ensure this is the correct deployed backend URL
+  baseURL: 'https://password-manager-seven-mauve.vercel.app/', // Ensure this is the correct deployed backend URL
 });
 
 const getAuthHeader = () => {
