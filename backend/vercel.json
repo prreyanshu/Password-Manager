@@ -11,11 +11,5 @@
       "src": "/(.*)",
       "dest": "/index.js"
     }
-  ],
-  "public": [
-    {
-      "src": "public",
-      "dest": "/"
-    }
   ]
 }
