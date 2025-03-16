@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
-    "serve": "vite preview"
+    "preview": "vite preview --host"
   },
   "dependencies": {
     "react": "^18.0.0",
