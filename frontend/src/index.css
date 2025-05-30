@@ -1,12 +1,24 @@
+@font-face {
+  font-family: 'Benguiat Bold';
+  src: url('../assets/fonts/BENGUIAB.TTF') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
 body {
-  font-family: Arial, sans-serif;
-  background-color: #f4f4f4;
+  font-family: 'Benguiat Bold', Arial, sans-serif;
+  background-color: #1f2125; /* Changed to gray */
   margin: 0;
   padding: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
+  color: #fff; /* Optional: Set a global text color */
+}
+
+* {
+  font-family: 'Benguiat Bold', Arial, sans-serif;
 }
 
 .container {

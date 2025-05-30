@@ -1,9 +1,21 @@
+@font-face {
+  font-family: 'Benguiat Bold';
+  src: url('../assets/fonts/BENGUIAB.TTF') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+body {
+  font-family: 'Benguiat Bold', Arial, sans-serif;
+}
+
 .auth-container {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+  background: #1f2125;
+  font-family: 'Benguiat Bold', Arial, sans-serif;
 }
 
 .auth-box {

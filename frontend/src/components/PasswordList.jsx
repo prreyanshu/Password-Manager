@@ -1,8 +1,9 @@
 import React from 'react';
+import './PasswordList.css';
 
 const PasswordList = ({ passwords }) => {
   return (
-    <div>
+    <div className="password-list">
       <h2>Password List</h2>
       <ul>
         {passwords.map((password, index) => (
