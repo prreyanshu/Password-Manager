@@ -4,6 +4,15 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const helmet = require('helmet');
 const path = require('path');
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+
+dotenv.config();
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => console.error('Error connecting to MongoDB:', err));
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -81,6 +90,9 @@ app.get('/passwords', authenticateBasic, (req, res) => {
   res.json(userPasswords);
 });
 
+const passwordRoutes = require('./routes/passwordRoutes');
+app.use('/api/passwords', passwordRoutes);
+
 // Serve the index.html file for the root URL
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -94,4 +106,3 @@ app.get('*', (req, res) => {
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
-

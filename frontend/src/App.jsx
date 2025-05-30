@@ -53,16 +53,8 @@ const App = () => {
   return (
     <div className="container">
       <h1>Password Manager</h1>
-      <div>
-        <input
-          type="text"
-          value={appName}
-          onChange={(e) => setAppName(e.target.value)}
-          placeholder="Enter app name"
-        />
-        <button onClick={handleGeneratePassword}>Generate Password</button>
-      </div>
-      <PasswordList passwords={passwords} />
+      {/* Pass both passwords and setPasswords as props */}
+      <PasswordList passwords={passwords} setPasswords={setPasswords} />
     </div>
   );
 };

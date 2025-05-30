@@ -1,6 +1,6 @@
 @font-face {
   font-family: 'Benguiat Bold';
-  src: url('../assets/fonts/BENGUIAB.TTF') format('truetype');
+  src: url('/assets/fonts/BENGUIAB.TTF') format('truetype');
   font-weight: bold;
   font-style: normal;
 }
