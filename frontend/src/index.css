@@ -21,17 +21,9 @@ body {
   font-family: 'Benguiat Bold', Arial, sans-serif;
 }
 
-.container {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  width: 400px;
-  text-align: center;
-}
 
 h1 {
-  color: #333;
+  color: #991104;
 }
 
 input[type="text"] {

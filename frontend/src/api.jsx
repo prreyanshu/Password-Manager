@@ -1,17 +1,13 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000/', // Ensure this is the correct deployed backend URL
+  baseURL: 'http://localhost:3000',
 });
 
 const getAuthHeader = () => {
   const username = localStorage.getItem('username');
   const password = localStorage.getItem('password');
-  console.log('Stored credentials:', { username, password }); // Debugging log
-  if (username && password) {
-    return `Basic ${btoa(`${username}:${password}`)}`;
-  }
-  return '';
+  return 'Basic ' + btoa(`${username}:${password}`);
 };
 
 export const register = async (user) => {
@@ -38,26 +34,33 @@ export const login = async (user) => {
   }
 };
 
-export const savePassword = async (password) => {
-  try {
-    const response = await api.post('/generate-password', password, {
-      headers: { Authorization: getAuthHeader() },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error during savePassword:', error);
-    throw error.response ? error.response.data : new Error('Save password failed');
-  }
-};
-
 export const getPasswords = async () => {
   try {
     const response = await api.get('/passwords', {
-      headers: { Authorization: getAuthHeader() },
+      headers: { Authorization: getAuthHeader() }
     });
     return response.data;
   } catch (error) {
-    console.error('Error during getPasswords:', error);
-    throw error.response ? error.response.data : new Error('Get passwords failed');
+    console.error('Error fetching passwords:', error);
+    throw error;
+  }
+};
+
+export const savePassword = async (passwordData) => {
+  try {
+    const response = await api.post(
+      '/generate-password', // <-- change this line
+      passwordData,
+      {
+        headers: { 
+          Authorization: getAuthHeader(),
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error saving password:', error);
+    throw error;
   }
 };

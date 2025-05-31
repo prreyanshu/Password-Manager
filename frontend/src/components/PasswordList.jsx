@@ -1,130 +1,138 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getPasswords, savePassword } from '../api';
 import './PasswordList.css';
 
-const PasswordList = ({ passwords, setPasswords }) => {
-  const [showForm, setShowForm] = useState(false);
+const PasswordList = () => {
+  const [passwords, setPasswords] = useState([]);
+  const [showInput, setShowInput] = useState(false);
   const [title, setTitle] = useState('');
-  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [note, setNote] = useState('');
-  const [expandedIndex, setExpandedIndex] = useState(null); // Track which bar is expanded
+  const [error, setError] = useState('');
+  const [selectedPassword, setSelectedPassword] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const toggleForm = () => {
-    setShowForm(!showForm);
-    resetForm(); // Reset the form when toggling
+  // Fetch passwords when component mounts
+  useEffect(() => {
+    fetchPasswords();
+  }, []);
+
+  const fetchPasswords = async () => {
+    try {
+      setLoading(true);
+      const data = await getPasswords();
+      setPasswords(data);
+      setError(null);
+    } catch (err) {
+      setError('Failed to load passwords');
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const resetForm = () => {
+  const toggleInput = () => {
+    setShowInput(!showInput);
     setTitle('');
-    setUsername('');
     setPassword('');
-    setNote('');
   };
 
   const generatePassword = () => {
-    const generatedPassword = Math.random().toString(36).slice(-10); // Simple random password generator
-    setPassword(generatedPassword);
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    const length = 12;
+    let newPassword = '';
+    for (let i = 0; i < length; i++) {
+      newPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setPassword(newPassword);
   };
 
-  const handleSave = () => {
-    if (!title) {
-      alert('Title is required!');
+  const handleSave = async () => {
+    if (!title || !password) {
+      setError('Please enter both app name and password');
       return;
     }
 
-    const newPassword = {
-      title,
-      username: username || 'N/A',
-      password: password || Math.random().toString(36).slice(-10), // Generate password if empty
-      note: note || 'N/A',
-    };
+    try {
+      const savedPassword = await savePassword({
+        appName: title, // <-- send as appName
+        password,
+        createdAt: new Date()
+      });
 
-    if (typeof setPasswords === 'function') {
-      setPasswords((prevPasswords) => [...prevPasswords, newPassword]);
-    } else {
-      console.error('setPasswords is not a function. Please pass it as a prop.');
+      setPasswords(prevPasswords => [...prevPasswords, savedPassword]);
+      setShowInput(false);
+      setTitle('');
+      setPassword('');
+      setError('');
+    } catch (err) {
+      setError('Failed to save password');
+      console.error('Save error:', err);
     }
-
-    setShowForm(false);
-    resetForm();
   };
 
-  const toggleExpand = (index) => {
-    setExpandedIndex(expandedIndex === index ? null : index); // Toggle the expanded bar
+  const handlePasswordClick = (index) => {
+    setSelectedPassword(selectedPassword === index ? null : index);
   };
 
   return (
     <div className="password-list">
-      <h2>Password List</h2>
-      <button className="add-button" onClick={toggleForm}>
-        +
-      </button>
-      {showForm && (
-        <div className="password-form">
-          <div className="form-group">
-            <label>Title:</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter title"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Username (optional):</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter username"
-            />
-          </div>
-          <div className="form-group">
-            <label>Password:</label>
-            <div className="password-input">
-              <input
-                type="text"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Click 'Generate' or enter manually"
-              />
-              <button type="button" onClick={generatePassword}>
-                Generate
-              </button>
+      <h2 className="list-title">Password List</h2>
+      
+      <div className="password-boxes">
+        {loading ? (
+          <div>Loading...</div>
+        ) : passwords.length > 0 ? (
+          passwords.map((pass, index) => (
+            <div 
+              key={pass._id || index}
+              onClick={() => handlePasswordClick(index)}
+              className="password-box"
+            >
+              {pass.appName}
+              {selectedPassword === index && (
+                <div className="password-value">
+                  <div><strong>App Name:</strong> {pass.appName}</div>
+                  <div><strong>Password:</strong> {pass.password}</div>
+                </div>
+              )}
             </div>
+          ))
+        ) : (
+          <div className="empty-list">
+            <p>No passwords saved</p>
           </div>
-          <div className="form-group">
-            <label>Note (optional):</label>
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Enter a note"
-            ></textarea>
+        )}
+      </div>
+
+      <button className="create-button" onClick={toggleInput}>
+        Create Password
+      </button>
+
+      {showInput && (
+        <div className="password-inputs">
+          {error && <p className="error-message">{error}</p>}
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Enter App Name"
+          />
+          <div className="password-generation">
+            <input
+              type="text"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+            />
+            <button onClick={generatePassword} className="generate-button">
+              Generate
+            </button>
+            <button onClick={handleSave} className="save-button">
+              Save
+            </button>
           </div>
-          <button className="save-button" onClick={handleSave}>
-            Save
-          </button>
         </div>
       )}
-      <ul className="password-items">
-        {passwords.map((password, index) => (
-          <li
-            key={index}
-            className={`password-item ${expandedIndex === index ? 'expanded' : ''}`}
-            onClick={() => toggleExpand(index)}
-          >
-            <div className="password-title">{password.title}</div>
-            {expandedIndex === index && (
-              <div className="password-details">
-                <p><strong>Username:</strong> {password.username}</p>
-                <p><strong>Password:</strong> {password.password}</p>
-                <p><strong>Note:</strong> {password.note}</p>
-              </div>
-            )}
-          </li>
-        ))}
-      </ul>
     </div>
   );
 };

@@ -1,36 +1,30 @@
 const express = require('express');
 const router = express.Router();
-const Password = require('../models/Password'); // Import the Password model
-const User = require('../models/User'); // Import the User model
+const Password = require('../models/Password');
+const auth = require('../middleware/auth');
 
-// POST route to save a new password
-router.post('/save-password', async (req, res) => {
-  const { title, username, password, note } = req.body;
-
+// Get passwords for logged-in user
+router.get('/', auth, async (req, res) => {
   try {
-    // Create a new password document
-    const newPassword = new Password({
-      title,
-      username,
-      password,
-      note,
-    });
-
-    // Save the document to the database
-    const savedPassword = await newPassword.save();
-    res.status(201).json({ message: 'Password saved successfully', data: savedPassword });
+    const passwords = await Password.find({ userId: req.user._id });
+    res.json(passwords);
   } catch (err) {
-    console.error('Error saving password:', err);
-    res.status(500).json({ message: 'Error saving password', error: err });
+    res.status(500).json({ message: err.message });
   }
 });
 
-router.get('/get-passwords', async (req, res) => {
+// Save password for logged-in user
+router.post('/', auth, async (req, res) => {
   try {
-    const passwords = await Password.find({});
-    res.json(passwords);
+    const password = new Password({
+      title: req.body.title,
+      password: req.body.password,
+      userId: req.user._id
+    });
+    const newPassword = await password.save();
+    res.status(201).json(newPassword);
   } catch (err) {
-    res.status(500).json({ message: 'Error retrieving passwords', error: err });
+    res.status(400).json({ message: err.message });
   }
 });
 

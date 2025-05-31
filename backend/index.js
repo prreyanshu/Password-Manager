@@ -6,6 +6,8 @@ const helmet = require('helmet');
 const path = require('path');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const User = require('./models/User');
+const Password = require('./models/Password');
 
 dotenv.config();
 
@@ -17,10 +19,7 @@ mongoose
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Use Helmet to set security-related HTTP headers
 app.use(helmet());
-
-// Set Content Security Policy (CSP) headers
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
@@ -28,21 +27,13 @@ app.use((req, res, next) => {
   );
   next();
 });
-
-app.use(cors()); // Enable CORS
+app.use(cors());
 app.use(express.json());
-
-// Serve static files from the "public" directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-const users = [];
-const passwords = [];
+const generatePassword = () => crypto.randomBytes(8).toString('hex');
 
-const generatePassword = () => {
-  return crypto.randomBytes(8).toString('hex');
-};
-
-const authenticateBasic = (req, res, next) => {
+const authenticateBasic = async (req, res, next) => {
   const authHeader = req.headers['authorization'];
   if (!authHeader) return res.status(401).json({ error: 'Authorization header missing' });
 
@@ -50,59 +41,88 @@ const authenticateBasic = (req, res, next) => {
   const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
   const [username, password] = credentials.split(':');
 
-  const user = users.find(u => u.username === username);
-  if (!user || !bcrypt.compareSync(password, user.password)) {
-    return res.status(403).json({ error: 'Invalid credentials' });
+  try {
+    const user = await User.findOne({ username });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(403).json({ error: 'Invalid credentials' });
+    }
+    req.user = user;
+    next();
+  } catch (err) {
+    return res.status(500).json({ error: 'Internal server error' });
   }
-
-  req.user = user;
-  next();
 };
 
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 10);
-  users.push({ username, password: hashedPassword });
-  console.log('Registered users:', users); // Debugging log
-  res.status(201).json({ message: 'User registered' });
+  console.log('Register body:', req.body);
+  try {
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ username, password: hashedPassword });
+    await newUser.save();
+    res.status(201).json({ message: 'User registered' });
+  } catch (err) {
+    console.error('Registration error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  const user = users.find(u => u.username === username);
-  console.log('Login attempt:', { username, password }); // Debugging log
-  if (!user || !(await bcrypt.compare(password, user.password))) {
-    console.log('Invalid credentials'); // Debugging log
-    return res.status(403).json({ error: 'Invalid credentials' });
+  try {
+    const user = await User.findOne({ username });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(403).json({ error: 'Invalid credentials' });
+    }
+    res.status(200).json({ message: 'Login successful' });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
-  res.status(200).json({ message: 'Login successful' });
 });
 
-app.post('/generate-password', authenticateBasic, (req, res) => {
-  const { appName } = req.body;
+// Save password
+app.post('/generate-password', authenticateBasic, async (req, res) => {
+  const { appName, note } = req.body;
   const password = generatePassword();
-  passwords.push({ appName, password, username: req.user.username });
-  res.json({ appName, password });
+  try {
+    const newPassword = new Password({
+      appName, // <-- store app name
+      password,
+      userId: req.user._id,
+      note: note || ''
+    });
+    await newPassword.save();
+    res.json({ appName, password });
+  } catch (err) {
+    res.status(500).json({ error: 'Error saving password' });
+  }
 });
 
-app.get('/passwords', authenticateBasic, (req, res) => {
-  const userPasswords = passwords.filter(p => p.username === req.user.username);
-  res.json(userPasswords);
+// Fetch passwords
+app.get('/passwords', authenticateBasic, async (req, res) => {
+  try {
+    const userPasswords = await Password.find({ userId: req.user._id }); // Filter by userId
+    res.json(userPasswords);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching passwords' });
+  }
 });
-
-const passwordRoutes = require('./routes/passwordRoutes');
-app.use('/api/passwords', passwordRoutes);
 
 // Serve the index.html file for the root URL
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Serve the index.html file for any other routes
+// Serve the index.html file for any other routes (SPA fallback)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  console.log(`Server is running on http://localhost:${port}`);
 });
