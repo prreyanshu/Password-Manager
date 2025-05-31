@@ -14,6 +14,7 @@ const PasswordList = () => {
   const [note, setNote] = useState('');
   const [editingIndex, setEditingIndex] = useState(null);
   const [editNoteValue, setEditNoteValue] = useState('');
+  const [entryUsername, setEntryUsername] = useState('');
 
   // Fetch passwords when component mounts
   useEffect(() => {
@@ -39,6 +40,7 @@ const PasswordList = () => {
     setTitle('');
     setPassword('');
     setNote('');
+    setEntryUsername('');
   };
 
   const generatePassword = () => {
@@ -60,6 +62,7 @@ const PasswordList = () => {
     try {
       await savePassword({
         appName: title,
+        username: entryUsername, // <-- add this
         password,
         note,
         createdAt: new Date()
@@ -70,6 +73,7 @@ const PasswordList = () => {
       setPassword('');
       setNote('');
       setError('');
+      setEntryUsername('');
     } catch (err) {
       setError('Failed to save password');
       console.error('Save error:', err);
@@ -98,6 +102,7 @@ const PasswordList = () => {
               {selectedPassword === index && (
                 <div className="password-value">
                   <div><strong>App Name:</strong> {pass.appName}</div>
+                  <div><strong>Username:</strong> {pass.username}</div> {/* <-- Move this here */}
                   <div><strong>Password:</strong> {pass.password}</div>
                   {pass.note && editingIndex !== index && (
                     <div>
@@ -193,6 +198,13 @@ const PasswordList = () => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Enter App Name"
+          />
+          <input
+            type="text"
+            value={entryUsername}
+            onChange={e => setEntryUsername(e.target.value)}
+            placeholder="Enter Username"
+            className="username-input"
           />
           <div className="password-generation">
             <input

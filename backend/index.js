@@ -87,11 +87,12 @@ app.post('/login', async (req, res) => {
 
 // Save password
 app.post('/generate-password', authenticateBasic, async (req, res) => {
-  const { appName, note } = req.body;
+  const { appName, username, note } = req.body; // <-- add username
   const password = generatePassword();
   try {
     const newPassword = new Password({
-      appName, // <-- store app name
+      appName,
+      username, // <-- save username
       password,
       userId: req.user._id,
       note: note || ''
@@ -116,15 +117,19 @@ app.get('/passwords', authenticateBasic, async (req, res) => {
 // Update password note
 app.patch('/passwords/:id', authenticateBasic, async (req, res) => {
   try {
+    const updateFields = {};
+    if (req.body.note !== undefined) updateFields.note = req.body.note;
+    if (req.body.username !== undefined) updateFields.username = req.body.username;
+
     const updated = await Password.findOneAndUpdate(
       { _id: req.params.id, userId: req.user._id },
-      { note: req.body.note },
+      updateFields,
       { new: true }
     );
     if (!updated) return res.status(404).json({ error: 'Password not found' });
     res.json(updated);
   } catch (err) {
-    res.status(500).json({ error: 'Error updating note' });
+    res.status(500).json({ error: 'Error updating password entry' });
   }
 });
 
