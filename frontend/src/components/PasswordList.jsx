@@ -11,6 +11,9 @@ const PasswordList = () => {
   const [selectedPassword, setSelectedPassword] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copiedIndex, setCopiedIndex] = useState(null);
+  const [note, setNote] = useState('');
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editNoteValue, setEditNoteValue] = useState('');
 
   // Fetch passwords when component mounts
   useEffect(() => {
@@ -35,6 +38,7 @@ const PasswordList = () => {
     setShowInput(!showInput);
     setTitle('');
     setPassword('');
+    setNote('');
   };
 
   const generatePassword = () => {
@@ -54,16 +58,17 @@ const PasswordList = () => {
     }
 
     try {
-      const savedPassword = await savePassword({
-        appName: title, // <-- send as appName
+      await savePassword({
+        appName: title,
         password,
+        note,
         createdAt: new Date()
       });
-
-      setPasswords(prevPasswords => [...prevPasswords, savedPassword]);
+      await fetchPasswords(); // <-- fetch the full list again
       setShowInput(false);
       setTitle('');
       setPassword('');
+      setNote('');
       setError('');
     } catch (err) {
       setError('Failed to save password');
@@ -93,8 +98,65 @@ const PasswordList = () => {
               {selectedPassword === index && (
                 <div className="password-value">
                   <div><strong>App Name:</strong> {pass.appName}</div>
+                  <div><strong>Password:</strong> {pass.password}</div>
+                  {pass.note && editingIndex !== index && (
+                    <div>
+                      <strong>Note:</strong> {pass.note}
+                      <button
+                        className="edit-note-button"
+                        style={{ marginLeft: '10px' }}
+                        onClick={e => {
+                          e.stopPropagation();
+                          setEditingIndex(index);
+                          setEditNoteValue(pass.note);
+                        }}
+                      >
+                        Edit Note
+                      </button>
+                    </div>
+                  )}
+                  {editingIndex === index && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '5px' }}>
+                      <input
+                        type="text"
+                        value={editNoteValue}
+                        onChange={e => setEditNoteValue(e.target.value)}
+                        className="note-input"
+                        style={{ flex: 1 }}
+                      />
+                      <button
+                        className="save-note-button"
+                        onClick={async e => {
+                          e.stopPropagation();
+                          // Save the updated note to backend
+                          try {
+                            await savePassword({
+                              appName: pass.appName,
+                              password: pass.password,
+                              note: editNoteValue,
+                              _id: pass._id // assuming your backend can use _id to update
+                            }, true); // pass a flag for update if needed
+                            await fetchPasswords();
+                            setEditingIndex(null);
+                          } catch (err) {
+                            alert('Failed to update note');
+                          }
+                        }}
+                      >
+                        Save
+                      </button>
+                      <button
+                        className="cancel-note-button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          setEditingIndex(null);
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <strong>Password:</strong> {pass.password}
                     <button
                       className="copy-button"
                       onClick={e => {
@@ -146,6 +208,13 @@ const PasswordList = () => {
               Save
             </button>
           </div>
+          <input
+            type="text"
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            placeholder="Note (optional)"
+            className="note-input"
+          />
         </div>
       )}
     </div>

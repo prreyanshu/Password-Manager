@@ -46,19 +46,35 @@ export const getPasswords = async () => {
   }
 };
 
-export const savePassword = async (passwordData) => {
+export const savePassword = async (passwordData, isEdit = false) => {
   try {
-    const response = await api.post(
-      '/generate-password', // <-- change this line
-      passwordData,
-      {
-        headers: { 
-          Authorization: getAuthHeader(),
-          'Content-Type': 'application/json'
+    if (isEdit && passwordData._id) {
+      // PATCH for updating note
+      const response = await api.patch(
+        `/passwords/${passwordData._id}`,
+        { note: passwordData.note },
+        {
+          headers: {
+            Authorization: getAuthHeader(),
+            'Content-Type': 'application/json'
+          }
         }
-      }
-    );
-    return response.data;
+      );
+      return response.data;
+    } else {
+      // POST for creating new password
+      const response = await api.post(
+        '/generate-password',
+        passwordData,
+        {
+          headers: {
+            Authorization: getAuthHeader(),
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      return response.data;
+    }
   } catch (error) {
     console.error('Error saving password:', error);
     throw error;

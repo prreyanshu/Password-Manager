@@ -1,4 +1,5 @@
 const Password = require('../models/Password');
+const crypto = require('crypto');
 
 exports.generatePassword = async (req, res) => {
   const { appName } = req.body;
@@ -7,7 +8,7 @@ exports.generatePassword = async (req, res) => {
   try {
     const newPassword = new Password({ appName, password });
     await newPassword.save();
-    res.json({ appName, password });
+    res.json(newPassword);
   } catch (err) {
     res.status(500).json({ message: 'Error generating password', error: err });
   }

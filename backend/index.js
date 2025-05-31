@@ -97,7 +97,7 @@ app.post('/generate-password', authenticateBasic, async (req, res) => {
       note: note || ''
     });
     await newPassword.save();
-    res.json({ appName, password });
+    res.json(newPassword);
   } catch (err) {
     res.status(500).json({ error: 'Error saving password' });
   }
@@ -110,6 +110,21 @@ app.get('/passwords', authenticateBasic, async (req, res) => {
     res.json(userPasswords);
   } catch (err) {
     res.status(500).json({ error: 'Error fetching passwords' });
+  }
+});
+
+// Update password note
+app.patch('/passwords/:id', authenticateBasic, async (req, res) => {
+  try {
+    const updated = await Password.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user._id },
+      { note: req.body.note },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ error: 'Password not found' });
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: 'Error updating note' });
   }
 });
 
