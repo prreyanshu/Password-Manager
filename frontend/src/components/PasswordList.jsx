@@ -10,6 +10,7 @@ const PasswordList = () => {
   const [error, setError] = useState('');
   const [selectedPassword, setSelectedPassword] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [copiedIndex, setCopiedIndex] = useState(null);
 
   // Fetch passwords when component mounts
   useEffect(() => {
@@ -92,7 +93,21 @@ const PasswordList = () => {
               {selectedPassword === index && (
                 <div className="password-value">
                   <div><strong>App Name:</strong> {pass.appName}</div>
-                  <div><strong>Password:</strong> {pass.password}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <strong>Password:</strong> {pass.password}
+                    <button
+                      className="copy-button"
+                      onClick={e => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(pass.password);
+                        setCopiedIndex(index);
+                        setTimeout(() => setCopiedIndex(null), 1000);
+                      }}
+                      title="Copy password"
+                    >
+                      {copiedIndex === index ? 'copied' : 'Copy'}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
