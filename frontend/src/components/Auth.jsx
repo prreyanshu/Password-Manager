@@ -1,4 +1,3 @@
-// filepath: c:\VS-Code\manager\frontend\src\components\Auth.jsx
 import React, { useState } from 'react';
 import { register, login } from '../api';
 import './Auth.css';
@@ -8,19 +7,28 @@ const Auth = ({ setAuthenticated }) => {
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState(null);
+  const [loginError, setLoginError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+    setLoginError('');
     try {
       if (isLogin) {
         await login({ username, password });
       } else {
         await register({ username, password });
       }
-      console.log('User authenticated:', { username, password }); // Debugging log
       setAuthenticated(true);
     } catch (err) {
-      setError(err.response.data.error);
+      if (isLogin) {
+        setLoginError('Credentials are wrong');
+      }
+      setError(
+        err.response && err.response.data && err.response.data.error
+          ? err.response.data.error
+          : 'An error occurred'
+      );
     }
   };
 
@@ -44,11 +52,12 @@ const Auth = ({ setAuthenticated }) => {
             placeholder="Password"
             required
           />
+          {loginError && <div className="error-message">{loginError}</div>}
           <button type="submit">{isLogin ? 'Login' : 'Register'}</button>
         </form>
         <button className="switch-btn" onClick={() => setIsLogin(!isLogin)}>
           {isLogin ? 'Switch to Register' : 'Switch to Login'}
-        </button>
+        </button>                  
       </div>
     </div>
   );

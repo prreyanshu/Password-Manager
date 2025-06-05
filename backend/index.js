@@ -55,12 +55,14 @@ const authenticateBasic = async (req, res, next) => {
 
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
-  console.log('Register body:', req.body);
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password are required' });
+  }
+  const existingUser = await User.findOne({ username });
+  if (existingUser) {
+    return res.status(400).json({ error: 'Username is taken' });
+  }
   try {
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
-    }
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({ username, password: hashedPassword });
     await newUser.save();
