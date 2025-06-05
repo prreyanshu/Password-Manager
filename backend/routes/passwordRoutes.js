@@ -14,7 +14,7 @@ router.get('/', auth, async (req, res) => {
 });
 
 // Save password for logged-in user
-router.post('/', auth, async (req, res) => {
+router.post('/register', auth, async (req, res) => {
   try {
     const password = new Password({
       title: req.body.title,
