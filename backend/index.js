@@ -137,7 +137,7 @@ app.patch('/passwords/:id', authenticateBasic, async (req, res) => {
 
 // Serve the index.html file for the root URL
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.send('Backend is working!');
 });
 
 // Serve the index.html file for any other routes (SPA fallback)
